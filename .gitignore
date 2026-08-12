@@ -1,0 +1,8 @@
+node_modules/
+client/dist/
+.env
+.DS_Store
+*.log
+
+# Local design-system input, not part of the app
+*.skill

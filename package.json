@@ -1,0 +1,23 @@
+{
+  "name": "lyzr-voice-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Landing page that starts a live voice conversation with a Lyzr agent over LiveKit.",
+  "scripts": {
+    "setup": "npm install && npm --prefix client install",
+    "server": "node server.js",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm run server\" \"npm run client\"",
+    "build": "npm --prefix client run build",
+    "start": "npm run build && node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
