@@ -77,6 +77,32 @@ npm start
 
 Open **http://localhost:3001**.
 
+## Deploy to Vercel
+
+The two API routes run as serverless functions in production, since Vercel does not keep a
+long-running Express process. `server.js` is for local development only; both it and the
+functions call the same code in [lib/lyzr.js](lib/lyzr.js), so the behaviour is identical.
+
+| Environment | `/api/voice/start` and `/api/voice/end` served by |
+| --- | --- |
+| Local (`npm run dev`) | `server.js` (Express) |
+| Vercel | [api/voice/start.js](api/voice/start.js), [api/voice/end.js](api/voice/end.js) |
+
+[vercel.json](vercel.json) pins the build, because Vercel only runs `npm install` at the
+repo root and `vite` lives in `client/`:
+
+```json
+"buildCommand": "npm --prefix client install && npm --prefix client run build",
+"outputDirectory": "client/dist"
+```
+
+**You must add the API key in Vercel**, since `.env` is not in the repo:
+
+> Project → Settings → Environment Variables → `LYZR_API_KEY` = your key
+> Apply it to Production, Preview and Development, then redeploy.
+
+Without it, `/api/voice/start` returns a 500 explaining exactly that.
+
 ## Notes
 
 - **Microphone access needs a secure context.** `localhost` counts as secure, so local
@@ -100,7 +126,11 @@ Open **http://localhost:3001**.
 
 | Path | What it is |
 | --- | --- |
-| [server.js](server.js) | Express: `POST /api/voice/start`, `POST /api/voice/end`, static hosting |
+| [server.js](server.js) | Local Express server: both routes plus static hosting |
+| [lib/lyzr.js](lib/lyzr.js) | The Lyzr `start` / `end` calls, shared by the server and the functions |
+| [api/voice/start.js](api/voice/start.js) | Serverless `POST /api/voice/start` on Vercel |
+| [api/voice/end.js](api/voice/end.js) | Serverless `POST /api/voice/end` on Vercel |
+| [vercel.json](vercel.json) | Build command, output directory, SPA rewrite |
 | [.env.example](.env.example) | Template for `LYZR_API_KEY` |
 | [client/src/App.jsx](client/src/App.jsx) | The whole page and the LiveKit call logic |
 | [client/src/styles.css](client/src/styles.css) | Lyzr Dark Landing tokens and layout |

@@ -9,7 +9,7 @@
     "server": "node server.js",
     "client": "npm --prefix client run dev",
     "dev": "concurrently -n server,client -c magenta,cyan \"npm run server\" \"npm run client\"",
-    "build": "npm --prefix client run build",
+    "build": "npm --prefix client install && npm --prefix client run build",
     "start": "npm run build && node server.js"
   },
   "dependencies": {

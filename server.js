@@ -1,17 +1,18 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import crypto from 'node:crypto';
 
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { startSession, endSession } from './lib/lyzr.js';
 
-const LYZR_BASE = 'https://voice-livekit.studio.lyzr.ai';
-const AGENT_ID = '6a75aa6feb7f95ec320c21a0';
-const API_KEY = process.env.LYZR_API_KEY;
+/* Local development server. In production on Vercel these same two routes
+ * are served by the serverless functions in api/voice/. */
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
+const API_KEY = process.env.LYZR_API_KEY;
 
 if (!API_KEY) {
   console.error('LYZR_API_KEY is not set. Copy .env.example to .env and add your key.');
@@ -23,30 +24,19 @@ app.use(cors());
 app.use(express.json());
 
 // POST /api/voice/start
-// Mints a Lyzr voice session and passes the Lyzr body straight back to the browser,
-// so the client sees the real field names (livekitUrl / userToken / roomName).
+// Passes the Lyzr body straight back to the browser, so the client sees the
+// real field names (livekitUrl / userToken / roomName).
 app.post('/api/voice/start', async (req, res) => {
-  const userIdentity = `web_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
-
   try {
-    const upstream = await fetch(`${LYZR_BASE}/v1/sessions/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-      body: JSON.stringify({ agentId: AGENT_ID, userIdentity }),
-    });
+    const result = await startSession(API_KEY);
 
-    const text = await upstream.text();
-
-    if (!upstream.ok) {
-      console.error(`Lyzr /sessions/start -> ${upstream.status}: ${text}`);
-      return res
-        .status(upstream.status)
-        .type(upstream.headers.get('content-type') || 'text/plain')
-        .send(text);
+    if (!result.ok) {
+      console.error(`Lyzr /sessions/start -> ${result.status}: ${result.body}`);
+      return res.status(result.status).type(result.contentType).send(result.body);
     }
 
-    console.log(`session started for ${userIdentity}`);
-    res.type('application/json').send(text);
+    console.log(`session started for ${result.userIdentity}`);
+    res.type('application/json').send(result.body);
   } catch (err) {
     console.error('start failed:', err);
     res.status(502).json({ error: `Could not reach Lyzr: ${err.message}` });
@@ -59,17 +49,9 @@ app.post('/api/voice/end', async (req, res) => {
   if (!roomName) return res.status(400).json({ error: 'roomName is required' });
 
   try {
-    const upstream = await fetch(`${LYZR_BASE}/v1/sessions/end`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-      body: JSON.stringify({ roomName }),
-    });
-
-    if (!upstream.ok) {
-      console.error(`Lyzr /sessions/end -> ${upstream.status}: ${await upstream.text()}`);
-    } else {
-      console.log(`session ended: ${roomName}`);
-    }
+    const result = await endSession(API_KEY, roomName);
+    if (!result.ok) console.error(`Lyzr /sessions/end -> ${result.status}: ${result.body}`);
+    else console.log(`session ended: ${roomName}`);
   } catch (err) {
     // Best effort: the browser has already torn down its side of the call.
     console.error('end failed:', err);
