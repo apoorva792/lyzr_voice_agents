@@ -89,17 +89,19 @@ button {
 .wordmark {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font: 300 1.25rem/1 'Playfair Display', serif;
-  color: var(--text-hi);
+  line-height: 0;
 }
 
-.mark {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--mahogany);
-  box-shadow: var(--glow);
+/* Official Lyzr lockup: white ink on transparency, so it sits directly on the
+   dark nav with no plate behind it. */
+.wordmark img {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+
+.wordmark:hover img {
+  opacity: 0.8;
 }
 
 .nav-note,

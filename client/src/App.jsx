@@ -321,10 +321,10 @@ export default function App() {
 
       <header className="nav">
         <div className="shell nav-inner">
-          <span className="wordmark">
-            <span className="mark" aria-hidden="true" />
-            Lyzr
-          </span>
+          <a className="wordmark" href="https://www.lyzr.ai" target="_blank" rel="noreferrer">
+            {/* 441x170 source, so 73x28 keeps the ratio and reserves the space. */}
+            <img src="/lyzr-logo.png" alt="Lyzr" width="73" height="28" />
+          </a>
           <span className="nav-note">Voice agents</span>
         </div>
       </header>
